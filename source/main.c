@@ -219,6 +219,8 @@ static void hashmap(void) {
 /*****************************************************************************/
 
 int main(int argc, char** argv) {
+    extern void world_init(void);
+    world_init();
     printf(":> ");
     while(true) {
         expression();
