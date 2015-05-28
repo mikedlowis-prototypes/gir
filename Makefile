@@ -20,7 +20,6 @@ LD = $(CC)
 MAKEDEPEND = $(CPP) -M $(CPPFLAGS) -o  $<
 CCDEPGEN = -MMD -MF $*.d
 CFLAGS = -Wall -Wextra -O3 --std=c99 --pedantic $(addprefix -I,$(INCLUDES))
-LDFLAGS = -static
 
 -include $(SOURCES:.c=.d)
 

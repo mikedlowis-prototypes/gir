@@ -13,30 +13,36 @@
 #define BOOL    4
 #define CHAR    5
 
-#define LPAR    6
-#define RPAR    7
-#define LBRACK  8
-#define RBRACK  9
-#define LBRACE  10
-#define RBRACE  11
+#define LPAR    10
+#define RPAR    11
+#define ALBRACK 12
+#define LBRACK  13
+#define RBRACK  14
+#define ALBRACE 15
+#define LBRACE  16
+#define RBRACE  17
 
-#define COMMA   12
-#define COLON   13
-#define END     14
-#define BINOP   15
+#define COMMA   20
+#define COLON   21
+#define END     22
+#define BINOP   23
+#define PIPE    24
 
-#define RETURN  16
-#define ASSIGN  17
-#define ID      18
-#define KEYW    19
+#define RETURN  30
+#define ASSIGN  31
+#define ID      32
+#define KEYW    33
 
 #define ARRAY        100
-#define MAP          101
-#define PAIR         102
-#define UNARY_MSG    103
-#define BINARY_MSG   104
-#define KEYWORD_MSG  105
-#define KEYWORD_PAIR 106
+#define OBJECT       101
+#define HASHMAP      102
+#define HASHSET      103
+
+#define PAIR         104
+#define UNARY_MSG    105
+#define BINARY_MSG   106
+#define KEYWORD_MSG  107
+#define KEYWORD_PAIR 108
 
 #endif /* PARSER_H */
 

@@ -18,14 +18,19 @@ int yywrap(void){ return 1; }
 [ \t]                       Column++;
 #.*[\r\n]+                  Row++; Column = 1;
 
+"="                         TOKEN(ASSIGN);
+"<-"                        TOKEN(ASSIGN);
+
 "."                         TOKEN(END);
 ","                         TOKEN(COMMA);
-"="                         TOKEN(ASSIGN);
 ":"                         TOKEN(COLON);
+"|"                         TOKEN(PIPE);
 "("                         TOKEN(LPAR);
 ")"                         TOKEN(RPAR);
+"@["                        TOKEN(ALBRACK);
 "["                         TOKEN(LBRACK);
 "]"                         TOKEN(RBRACK);
+"@{"                        TOKEN(ALBRACE);
 "{"                         TOKEN(LBRACE);
 "}"                         TOKEN(RBRACE);
 

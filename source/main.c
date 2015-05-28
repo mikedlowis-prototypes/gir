@@ -114,19 +114,12 @@ static void operand(void);
 static void messages(void);
 static void literal(void);
 static void array(void);
+static void object(void);
 static void hashmap(void);
+static void hashset(void);
 
 static void expression(void) {
-    if (accept(ID)) {
-        shift_reduce(ID, 0);
-        if (accept(ASSIGN)) {
-            expect(ASSIGN);
-            expression();
-            push_reduce(ASSIGN, 2);
-        }
-    } else {
-        keyword_send();
-    }
+    keyword_send();
     optional(END);
 }
 
@@ -173,15 +166,17 @@ static void operand(void) {
 
 static void literal(void) {
     switch (Current) {
-        case ID:     shift_reduce(ID, 0u);     break;
-        case NUM:    shift_reduce(NUM, 0u);    break;
-        case SELF:   shift_reduce(SELF, 0u);   break;
-        case STRING: shift_reduce(STRING, 0u); break;
-        case BOOL:   shift_reduce(BOOL, 0u);   break;
-        case CHAR:   shift_reduce(CHAR, 0u);   break;
-        case LBRACK: array();                  break;
-        case LBRACE: hashmap();                break;
-        default:     error("Invalid literal");
+        case ID:      shift_reduce(ID, 0u);     push_reduce(UNARY_MSG, 1); break;
+        case NUM:     shift_reduce(NUM, 0u);    break;
+        case SELF:    shift_reduce(SELF, 0u);   break;
+        case STRING:  shift_reduce(STRING, 0u); break;
+        case BOOL:    shift_reduce(BOOL, 0u);   break;
+        case CHAR:    shift_reduce(CHAR, 0u);   break;
+        case LBRACK:  array();                  break;
+        case LBRACE:  object();                 break;
+        case ALBRACE: hashmap();                break;
+        case ALBRACK: hashset();                break;
+        default:      error("Invalid literal");
     }
 }
 
@@ -201,7 +196,7 @@ static void array(void) {
 
 static void hashmap(void) {
     int count = 0;
-    expect(LBRACE);
+    expect(ALBRACE);
     if (!accept(RBRACE)) {
         do {
             optional(COMMA);
@@ -213,7 +208,36 @@ static void hashmap(void) {
         } while(accept(COMMA));
     }
     expect(RBRACE);
-    push_reduce(MAP, count);
+    push_reduce(HASHMAP, count);
+}
+
+static void hashset(void)
+{
+    int count = 0;
+    expect(ALBRACK);
+    if (!accept(RBRACK)) {
+        do {
+            optional(COMMA);
+            expression();
+            count++;
+        } while(accept(COMMA));
+    }
+    expect(RBRACK);
+    push_reduce(HASHSET, count);
+}
+
+static void object(void)
+{
+    expect(LBRACE);
+    if (accept(PIPE)) {
+        expect(PIPE);
+        expect(PIPE);
+    }
+    while (!accept(RBRACE)) {
+        expression();
+    }
+    expect(RBRACE);
+    push_reduce(OBJECT, 0);
 }
 
 /*****************************************************************************/
