@@ -88,7 +88,7 @@ void reduce(int count) {
     AST* tree = Tree(type, count);
     intptr_t* stack = Token_Stack - (count-1);
     for (int i = 0; i < count; i++) {
-        tree->children[i] = stack[i];
+        tree->children[i] = (void*)stack[i];
     }
     Token_Stack -= count ;
     *(++Token_Stack) = (intptr_t)tree;
@@ -111,7 +111,6 @@ static void keyword_send(void);
 static void binary_send(void);
 static void unary_send(void);
 static void operand(void);
-static void messages(void);
 static void literal(void);
 static void array(void);
 static void object(void);
@@ -253,6 +252,8 @@ int main(int argc, char** argv) {
         PrintTree((AST*)*Token_Stack, 0);
         Token_Stack = Token_Buffer-1;
     }
+    (void)argc;
+    (void)argv;
     return 0;
 }
 
