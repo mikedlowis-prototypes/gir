@@ -8,10 +8,9 @@
 #define UNKNOWN 0
 
 #define NUM     1
-#define SELF    2
-#define STRING  3
-#define BOOL    4
-#define CHAR    5
+#define STRING  2
+#define CHAR    3
+#define SYMBOL  4
 
 #define LPAR    10
 #define RPAR    11
@@ -22,11 +21,10 @@
 #define LBRACE  16
 #define RBRACE  17
 
-#define COMMA   20
-#define COLON   21
-#define END     22
-#define BINOP   23
-#define PIPE    24
+#define COLON   20
+#define PERIOD  21
+#define BINOP   22
+#define PIPE    23
 
 #define RETURN  30
 #define ASSIGN  31

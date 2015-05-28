@@ -119,7 +119,7 @@ static void hashset(void);
 
 static void expression(void) {
     keyword_send();
-    optional(END);
+    optional(PERIOD);
 }
 
 static void keyword_send(void) {
@@ -167,9 +167,8 @@ static void literal(void) {
     switch (Current) {
         case ID:      shift_reduce(ID, 0u);     push_reduce(UNARY_MSG, 1); break;
         case NUM:     shift_reduce(NUM, 0u);    break;
-        case SELF:    shift_reduce(SELF, 0u);   break;
         case STRING:  shift_reduce(STRING, 0u); break;
-        case BOOL:    shift_reduce(BOOL, 0u);   break;
+        case SYMBOL:  shift_reduce(SYMBOL, 0u); break;
         case CHAR:    shift_reduce(CHAR, 0u);   break;
         case LBRACK:  array();                  break;
         case LBRACE:  object();                 break;
@@ -182,12 +181,9 @@ static void literal(void) {
 static void array(void) {
     int count = 0;
     expect(LBRACK);
-    if (!accept(RBRACK)) {
-        do {
-            optional(COMMA);
-            expression();
-            count++;
-        } while(accept(COMMA));
+    while (!accept(RBRACK)) {
+        expression();
+        count++;
     }
     expect(RBRACK);
     push_reduce(ARRAY, count);
@@ -196,15 +192,12 @@ static void array(void) {
 static void hashmap(void) {
     int count = 0;
     expect(ALBRACE);
-    if (!accept(RBRACE)) {
-        do {
-            optional(COMMA);
-            shift_reduce(STRING, 0);
-            expect(COLON);
-            expression();
-            push_reduce(PAIR, 2);
-            count++;
-        } while(accept(COMMA));
+    while (!accept(RBRACE)) {
+        shift_reduce(STRING, 0);
+        expect(COLON);
+        expression();
+        push_reduce(PAIR, 2);
+        count++;
     }
     expect(RBRACE);
     push_reduce(HASHMAP, count);
@@ -214,12 +207,9 @@ static void hashset(void)
 {
     int count = 0;
     expect(ALBRACK);
-    if (!accept(RBRACK)) {
-        do {
-            optional(COMMA);
-            expression();
-            count++;
-        } while(accept(COMMA));
+    while (!accept(RBRACK)) {
+        expression();
+        count++;
     }
     expect(RBRACK);
     push_reduce(HASHSET, count);

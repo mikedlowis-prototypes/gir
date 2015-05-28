@@ -21,8 +21,7 @@ int yywrap(void){ return 1; }
 "="                         TOKEN(ASSIGN);
 "<-"                        TOKEN(ASSIGN);
 
-"."                         TOKEN(END);
-","                         TOKEN(COMMA);
+"."                         TOKEN(PERIOD);
 ":"                         TOKEN(COLON);
 "|"                         TOKEN(PIPE);
 "("                         TOKEN(LPAR);
@@ -34,11 +33,10 @@ int yywrap(void){ return 1; }
 "{"                         TOKEN(LBRACE);
 "}"                         TOKEN(RBRACE);
 
-"self"                      TOKEN(SELF);
-"true"|"false"              TOKEN(BOOL);
 [0-9]+                      TOKEN(NUM);
 '[^\\]'                     TOKEN(CHAR);
 \"[^"]*\"                   TOKEN(STRING);
+$[_a-zA-Z][_a-zA-Z0-9]*     TOKEN(SYMBOL);
 
 [+-]+                       TOKEN(BINOP);
 [_a-zA-Z][_a-zA-Z0-9]*      TOKEN(ID);
