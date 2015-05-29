@@ -18,9 +18,7 @@ main_env.Library('build/lib/libcds.a', FileList['modules/libcds/source/**/*.c'])
 runtime_libs = ['build/lib/libcds.a']
 
 # Build the parser
-main_env.CFile('source/lex.yy.c', 'source/lexer.l')
-parser_srcs = (FileList['source/*.c'] + ['source/lex.yy.c']).uniq
-main_env.Program('parser',  parser_srcs + runtime_libs)
+main_env.Program('parser',  FileList['source/*.c'] + runtime_libs)
 
 #------------------------------------------------------------------------------
 # Test Build Targets
