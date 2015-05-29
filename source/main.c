@@ -47,6 +47,7 @@ typedef struct AST {
 } AST;
 
 // Globals
+static FILE* File;
 static int CurrChar = ' ';
 static int CurrTok  = UNKNOWN;
 static intptr_t Token_Buffer[1024];
@@ -278,8 +279,16 @@ static int token(void)
 
 static void whitespace(void)
 {
-    while (isspace(current()))
-        discard();
+    while(isspace(current()) || ('#' == current())) {
+        if ('#' == current()) {
+            discard();
+            while (('\n' != current()) && (EOF != current()))
+                discard();
+            discard();
+        } else {
+            discard();
+        }
+    }
 }
 
 static int symbol(void)
@@ -387,12 +396,12 @@ static int current(void)
 
 static void append(void)
 {
-    CurrChar = getchar();
+    CurrChar = fgetc(File);
 }
 
 static void discard(void)
 {
-    CurrChar = getchar();
+    CurrChar = fgetc(File);
 }
 
 static void expect_ch(int ch)
@@ -402,7 +411,6 @@ static void expect_ch(int ch)
     else
         lex_error();
 }
-
 
 /* Tree Routines
  *****************************************************************************/
@@ -467,6 +475,7 @@ void push_reduce(int type, int nchildren)
  *****************************************************************************/
 int main(int argc, char** argv) {
     extern void world_init(void);
+    File = stdin;
     world_init();
     printf(":> ");
     while(true) {
