@@ -46,10 +46,19 @@ typedef struct AST {
     struct AST* children[];
 } AST;
 
+typedef struct strbuf_t {
+    size_t index;
+    size_t capacity;
+    char*  string;
+} strbuf_t;
+
 // Globals
 static FILE* File;
 static int CurrChar = ' ';
+static int Line = 1;
+static int Column = 0;
 static int CurrTok  = UNKNOWN;
+static strbuf_t Token = {0,0,0};
 static intptr_t Token_Buffer[1024];
 static intptr_t* Token_Stack = Token_Buffer-1;
 
@@ -88,6 +97,7 @@ static void append(void);
 static void discard(void);
 static void expect_ch(int ch);
 static void lex_error(void);
+static void fetch(void);
 
 // Tree Routines
 static AST* Tree(int type, int num_children);
@@ -96,6 +106,12 @@ void shift(int type);
 void reduce(int count);
 void shift_reduce(int type, int nchildren);
 void push_reduce(int type, int nchildren);
+
+// String Buffer
+void strbuf_init(strbuf_t* buf);
+void strbuf_putc(strbuf_t* buf, int ch);
+void strbuf_print(strbuf_t* buf, const char* str);
+char* strbuf_string(strbuf_t* buf);
 
 /* Parsing Rules
  *****************************************************************************/
@@ -383,12 +399,6 @@ static int operator(void)
 
 /* Lexical Analysis Helpers
  *****************************************************************************/
-static void lex_error(void)
-{
-    fprintf(stderr, "Lexer error\n");
-    exit(1);
-}
-
 static int current(void)
 {
     return CurrChar;
@@ -396,12 +406,13 @@ static int current(void)
 
 static void append(void)
 {
-    CurrChar = fgetc(File);
+    strbuf_putc(&Token, CurrChar);
+    fetch();
 }
 
 static void discard(void)
 {
-    CurrChar = fgetc(File);
+    fetch();
 }
 
 static void expect_ch(int ch)
@@ -410,6 +421,23 @@ static void expect_ch(int ch)
         append();
     else
         lex_error();
+}
+
+static void lex_error(void)
+{
+    fprintf(stderr, "Lexer error\n");
+    exit(1);
+}
+
+static void fetch(void)
+{
+    CurrChar = fgetc(File);
+    if (CurrChar == '\n') {
+        Line++;
+        Column = 0;
+    } else {
+        Column++;
+    }
 }
 
 /* Tree Routines
@@ -471,6 +499,41 @@ void push_reduce(int type, int nchildren)
     reduce(nchildren);
 }
 
+/* String Buffer
+ *****************************************************************************/
+void strbuf_init(strbuf_t* buf)
+{
+    buf->index = 0;
+    buf->capacity = 8;
+    buf->string = (char*)malloc(buf->capacity);
+    buf->string[buf->index] = 0;
+}
+
+void strbuf_putc(strbuf_t* buf, int ch)
+{
+    if (buf->string == NULL) {
+        strbuf_init(buf);
+    } else if ((buf->index + 2) >= buf->capacity) {
+        buf->capacity = buf->capacity << 1;
+        buf->string = (char*)realloc(buf->string, buf->capacity);
+    }
+    buf->string[buf->index++] = ch;
+    buf->string[buf->index] = '\0';
+}
+
+void strbuf_print(strbuf_t* buf, const char* str)
+{
+    while(*str)
+        strbuf_putc(buf, *str++);
+}
+
+char* strbuf_string(strbuf_t* buf)
+{
+    char* str = buf->string;
+    strbuf_init(buf);
+    return str;
+}
+
 /* Main
  *****************************************************************************/
 int main(int argc, char** argv) {
@@ -484,6 +547,7 @@ int main(int argc, char** argv) {
         /* Print and clear */
         PrintTree((AST*)*Token_Stack, 0);
         Token_Stack = Token_Buffer-1;
+        free(strbuf_string(&Token));
     }
     (void)argc;
     (void)argv;
