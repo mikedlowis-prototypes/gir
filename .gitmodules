@@ -4,3 +4,6 @@
 [submodule "modules/build-system"]
 	path = modules/build-system
 	url = https://github.com/mikedlowis/build-system.git
+[submodule "modules/libc"]
+	path = modules/libc
+	url = https://github.com/mikedlowis/libc.git

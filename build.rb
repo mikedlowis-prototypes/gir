@@ -7,7 +7,8 @@ require './modules/build-system/setup'
 # Define the default compiler environment
 main_env = BuildEnv.new do |env|
   env["CFLAGS"]  += ['-O3', '-Wall', '-Wextra', '--std=c99', '--pedantic']
-  env["CPPPATH"] += Dir['modules/libcds/source/**/'] + [ ]
+  env["CPPPATH"] += Dir['modules/libcds/source/**/'] +
+                    Dir['modules/libc/source/**/']
 end
 
 #------------------------------------------------------------------------------
@@ -15,7 +16,8 @@ end
 #------------------------------------------------------------------------------
 # Build third party libraries
 main_env.Library('build/lib/libcds.a', FileList['modules/libcds/source/**/*.c'])
-runtime_libs = ['build/lib/libcds.a']
+main_env.Library('build/lib/libc.a',   FileList['modules/libc/source/**/*.c'])
+runtime_libs = ['build/lib/libcds.a', 'build/lib/libc.a']
 
 # Build the parser
 main_env.Program('parser',  FileList['source/*.c'] + runtime_libs)
