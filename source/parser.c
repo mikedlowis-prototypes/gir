@@ -115,7 +115,7 @@ static void push_reduce(int type, int nchildren);
 // String Buffer
 static void strbuf_init(strbuf_t* buf);
 static void strbuf_putc(strbuf_t* buf, int ch);
-static void strbuf_print(strbuf_t* buf, const char* str);
+//static void strbuf_print(strbuf_t* buf, const char* str);
 static char* strbuf_string(strbuf_t* buf);
 
 
@@ -543,11 +543,11 @@ static void strbuf_putc(strbuf_t* buf, int ch)
     buf->string[buf->index] = '\0';
 }
 
-static void strbuf_print(strbuf_t* buf, const char* str)
-{
-    while(*str)
-        strbuf_putc(buf, *str++);
-}
+//static void strbuf_print(strbuf_t* buf, const char* str)
+//{
+//    while(*str)
+//        strbuf_putc(buf, *str++);
+//}
 
 static char* strbuf_string(strbuf_t* buf)
 {
