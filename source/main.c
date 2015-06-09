@@ -113,6 +113,9 @@ void strbuf_putc(strbuf_t* buf, int ch);
 void strbuf_print(strbuf_t* buf, const char* str);
 char* strbuf_string(strbuf_t* buf);
 
+// Main Routine
+int main(int argc, char** argv);
+
 /* Parsing Rules
  *****************************************************************************/
 static void expression(void)
