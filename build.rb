@@ -6,7 +6,7 @@ require './modules/build-system/setup'
 #------------------------------------------------------------------------------
 # Define the default compiler environment
 main_env = BuildEnv.new do |env|
-  env["CFLAGS"]  += ['-O3', '-Wall', '-Wextra', '--std=c99', '--pedantic']
+  env["CFLAGS"]  += ['-O3', '-Wall', '-Wextra', '-Werror', '--std=c99', '--pedantic']
   env["CPPPATH"] += Dir['modules/libcds/source/**/'] +
                     Dir['modules/libc/source/**/']
 end
