@@ -3,12 +3,8 @@
 */
 //#include "parser.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <ctype.h>
+#include <libc.h>
+#include <data/slist.h>
 
 #define UNKNOWN     0
 #define SYMBOL      1
@@ -32,23 +28,23 @@
 #define RBRACE      19
 #define OPERATOR    20
 
-#define ARRAY        100
-#define OBJECT       101
-#define HASHMAP      102
-#define HASHSET      103
-#define PAIR         104
-#define UNARY_MSG    105
-#define BINARY_MSG   106
-#define KEYWORD_MSG  107
-#define KEYWORD_PAIR 108
+#define ARRAY       100
+#define OBJECT      101
+#define HASHMAP     102
+#define HASHSET     103
+#define PAIR        104
+#define UNARY_MSG   105
+#define BINARY_MSG  106
+#define KEYWORD_MSG 107
+#define SELECTOR    108
 
 /* Table of Contents
  *****************************************************************************/
 // Types
 typedef struct AST {
     int type;
-    int num_children;
-    struct AST* children[];
+    slist_node_t link;
+    slist_t children;
 } AST;
 
 typedef struct strbuf_t {
@@ -64,20 +60,18 @@ static int Line = 1;
 static int Column = 0;
 static int CurrTok  = UNKNOWN;
 static strbuf_t Token = {0,0,0};
-static intptr_t Token_Buffer[1024];
-static intptr_t* Token_Stack = Token_Buffer-1;
 
 // Parsing Rules
-static void expression(void);
-static void keyword_send(void);
-static void binary_send(void);
-static void unary_send(void);
-static void operand(void);
-static void literal(void);
-static void array(void);
-static void hashmap(void);
-static void hashset(void);
-static void object(void);
+static AST* expression(void);
+static AST* keyword_send(void);
+static AST* binary_send(void);
+static AST* unary_send(void);
+static AST* operand(void);
+static AST* literal(void);
+static AST* array(void);
+static AST* hashmap(void);
+static AST* hashset(void);
+static AST* object(void);
 
 // Parsing Helpers
 static void error(const char* msg);
@@ -105,156 +99,157 @@ static void lex_error(void);
 static void fetch(void);
 
 // Tree Routines
-static AST* Tree(int type, int num_children);
-static void PrintTree(AST* tree, int depth);
-static void shift(int type);
-static void reduce(int count);
-static void shift_reduce(int type, int nchildren);
-static void push_reduce(int type, int nchildren);
+static AST* ast_new(int type);
+static AST* ast_tok(int type);
+static void ast_add_child(AST* parent, AST* child);
+static void ast_print(AST* tree, int depth);
 
 // String Buffer
 static void strbuf_init(strbuf_t* buf);
 static void strbuf_putc(strbuf_t* buf, int ch);
-//static void strbuf_print(strbuf_t* buf, const char* str);
-static char* strbuf_string(strbuf_t* buf);
-
 
 /*
  *****************************************************************************/
 void exec_file(FILE* file, const char* prompt)
 {
     File = file;
-    printf("%s", prompt);
     while(true) {
-        expression();
-        printf("stack: %du\n", (int)((Token_Stack - Token_Buffer) + 1));
-        /* Print and clear */
-        PrintTree((AST*)*Token_Stack, 0);
-        Token_Stack = Token_Buffer-1;
-        free(strbuf_string(&Token));
+        printf("%s", prompt);
+        ast_print(expression(), 0);
     }
 }
 
 /* Parsing Rules
  *****************************************************************************/
-static void expression(void)
+static AST* expression(void)
 {
-    keyword_send();
+    AST* expr = keyword_send();
     optional(SEMICOLON);
+    return expr;
 }
 
-static void keyword_send(void)
+static AST* keyword_send(void)
 {
-    int count  = 0;
-    binary_send();
+    AST* expr = binary_send();
+    AST* sel  = NULL;
     while (accept(KEYWORD)) {
-        shift_reduce(KEYWORD,0);
-        binary_send();
-        push_reduce(KEYWORD_PAIR, 2);
-        count++;
+        if (sel == NULL) {
+            sel = ast_new(SELECTOR);
+            ast_add_child(expr, sel);
+        }
+        ast_add_child(sel, ast_tok(KEYWORD));
+        ast_add_child(expr, binary_send());
     }
-    if (count > 0) {
-        push_reduce(KEYWORD_MSG, count);
-    }
+    return expr;
 }
 
-static void binary_send(void)
+static AST* binary_send(void)
 {
-    unary_send();
+    AST* expr = unary_send();
     if (accept(OPERATOR)) {
-        shift_reduce(OPERATOR,0);
-        unary_send();
-        push_reduce(BINARY_MSG, 3);
+        AST* msg = ast_new(BINARY_MSG);
+        ast_add_child(msg, expr);
+        ast_add_child(msg, ast_new(OPERATOR));
+        ast_add_child(msg, unary_send());
+        expr = msg;
     }
+    return expr;
 }
 
-static void unary_send(void)
+static AST* unary_send(void)
 {
-    operand();
+    AST* expr = operand();
     while (accept(IDENTIFIER)) {
-        shift_reduce(IDENTIFIER, 0);
-        push_reduce(UNARY_MSG, 2);
+        AST* msg = ast_new(UNARY_MSG);
+        ast_add_child(msg, expr);
+        ast_add_child(msg, ast_tok(IDENTIFIER));
+        printf("%d\n", (int)slist_size(&msg->children));
+        expr = msg;
     }
+    return expr;
 }
 
-static void operand(void)
+static AST* operand(void)
 {
+    AST* obj = NULL;
     if (accept(LPAR)) {
         expect(LPAR);
-        expression();
+        obj = expression();
         expect(RPAR);
     } else {
-        literal();
+        obj = literal();
     }
+    return obj;
 }
 
-static void literal(void)
+static AST* literal(void)
 {
+    AST* obj = NULL;
     switch (CurrTok) {
-        case IDENTIFIER: shift_reduce(IDENTIFIER, 0u); push_reduce(UNARY_MSG, 1); break;
-        case NUMBER:     shift_reduce(NUMBER, 0u);     break;
-        case STRING:     shift_reduce(STRING, 0u);     break;
-        case SYMBOL:     shift_reduce(SYMBOL, 0u);     break;
-        case CHARACTER:  shift_reduce(CHARACTER, 0u);  break;
-        case LBRACK:     array();                      break;
-        case LBRACE:     object();                     break;
-        case AT_LBRACE:  hashmap();                    break;
-        case AT_LBRACK:  hashset();                    break;
+        case IDENTIFIER: obj = ast_tok(IDENTIFIER); break;
+        case NUMBER:     obj = ast_tok(NUMBER);     break;
+        case STRING:     obj = ast_tok(STRING);     break;
+        case SYMBOL:     obj = ast_tok(SYMBOL);     break;
+        case CHARACTER:  obj = ast_tok(CHARACTER);  break;
+        case LBRACK:     obj = array();             break;
+        case LBRACE:     obj = object();            break;
+        case AT_LBRACE:  obj = hashmap();           break;
+        case AT_LBRACK:  obj = hashset();           break;
         default:         error("Invalid literal");
     }
+    return obj;
 }
 
-static void array(void)
+static AST* array(void)
 {
-    int count = 0;
+    AST* array_obj = ast_new(ARRAY);
     expect(LBRACK);
     while (!accept(RBRACK)) {
-        expression();
-        count++;
+        ast_add_child(array_obj, expression());
     }
     expect(RBRACK);
-    push_reduce(ARRAY, count);
+    return array_obj;
 }
 
-static void hashmap(void)
+static AST* hashmap(void)
 {
-    int count = 0;
+    AST* hashmap = ast_new(HASHMAP);
     expect(AT_LBRACE);
     while (!accept(RBRACE)) {
-        shift_reduce(STRING, 0);
+        AST* pair = ast_new(PAIR);
+        expect(STRING);
         expect(COLON);
-        expression();
-        push_reduce(PAIR, 2);
-        count++;
+        ast_add_child(pair, expression());
+        ast_add_child(hashmap, pair);
     }
     expect(RBRACE);
-    push_reduce(HASHMAP, count);
+    return hashmap;
 }
 
-static void hashset(void)
+static AST* hashset(void)
 {
-    int count = 0;
+    AST* hashset = ast_new(HASHSET);
     expect(AT_LBRACK);
     while (!accept(RBRACK)) {
-        expression();
-        count++;
+        ast_add_child(hashset, expression());
     }
     expect(RBRACK);
-    push_reduce(HASHSET, count);
+    return hashset;
 }
 
-static void object(void)
+static AST* object(void)
 {
+    AST* object = ast_new(OBJECT);
     expect(LBRACE);
     if (accept(PIPE)) {
         expect(PIPE);
         expect(PIPE);
     }
     while (!accept(RBRACE)) {
-        expression();
+        ast_add_child(object, expression());
     }
     expect(RBRACE);
-    push_reduce(OBJECT, 0);
+    return object;
 }
 
 /* Parsing Helpers
@@ -464,61 +459,38 @@ static void fetch(void)
 
 /* Tree Routines
  *****************************************************************************/
-static AST* Tree(int type, int num_children)
+static AST* ast_new(int type)
 {
-    AST* tree   = (AST*)calloc(1, sizeof(AST) * (num_children * sizeof(AST*)));
-    tree->type  = type;
-    tree->num_children = num_children;
+    AST* tree  = (AST*)calloc(1,sizeof(AST));
+    tree->type = type;
     return tree;
 }
 
-static void PrintTree(AST* tree, int depth)
+static AST* ast_tok(int type)
+{
+    expect(type);
+    return ast_new(type);
+}
+
+static void ast_add_child(AST* parent, AST* child)
+{
+    slist_push_back(&(parent->children), &(child->link));
+}
+
+static void ast_print(AST* tree, int depth)
 {
     int indent = depth * 2;
     printf("%*s(", indent, "");
     printf("%d", tree->type);
-    if (tree->num_children == 0) {
+    if (slist_size(&tree->children) == 0) {
         printf(")\n");
     } else {
         printf("\n");
-        for (int child = 0; child < tree->num_children; child++) {
-            PrintTree(tree->children[child], depth+1);
+        slist_foreach(elem, &(tree->children)) {
+            ast_print(container_of(elem, AST, link), depth+1);
         }
-
         printf("%*s)\n", indent, "");
     }
-}
-
-static void shift(int type)
-{
-    int curr = CurrTok;
-    if (expect(type)) {
-        *(++Token_Stack) = curr;
-    }
-}
-
-static void reduce(int count)
-{
-    int type  = *(Token_Stack--);
-    AST* tree = Tree(type, count);
-    intptr_t* stack = Token_Stack - (count-1);
-    for (int i = 0; i < count; i++) {
-        tree->children[i] = (void*)stack[i];
-    }
-    Token_Stack -= count ;
-    *(++Token_Stack) = (intptr_t)tree;
-}
-
-static void shift_reduce(int type, int nchildren)
-{
-    shift(type);
-    reduce(nchildren);
-}
-
-static void push_reduce(int type, int nchildren)
-{
-    *(++Token_Stack) = type;
-    reduce(nchildren);
 }
 
 /* String Buffer
@@ -549,10 +521,10 @@ static void strbuf_putc(strbuf_t* buf, int ch)
 //        strbuf_putc(buf, *str++);
 //}
 
-static char* strbuf_string(strbuf_t* buf)
-{
-    char* str = buf->string;
-    strbuf_init(buf);
-    return str;
-}
+//static char* strbuf_string(strbuf_t* buf)
+//{
+//    char* str = buf->string;
+//    strbuf_init(buf);
+//    return str;
+//}
 
