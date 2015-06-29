@@ -4,6 +4,7 @@
   */
 //#include "world.h"
 
+#if 0
 #include "set.h"
 #include "map.h"
 
@@ -55,5 +56,9 @@ void world_init(void)
     HashSet   = object_clone(Object);
     HashMap   = object_clone(Object);
 }
+#endif
 
+void world_init(void)
+{
+}
 

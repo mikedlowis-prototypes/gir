@@ -42,9 +42,10 @@
  *****************************************************************************/
 // Types
 typedef struct AST {
-    int type;
     slist_node_t link;
     slist_t children;
+    char* text;
+    int type;
 } AST;
 
 typedef struct strbuf_t {
@@ -107,6 +108,7 @@ static void ast_print(AST* tree, int depth);
 // String Buffer
 static void strbuf_init(strbuf_t* buf);
 static void strbuf_putc(strbuf_t* buf, int ch);
+static char* strbuf_string(strbuf_t* buf);
 
 /*
  *****************************************************************************/
@@ -163,7 +165,6 @@ static AST* unary_send(void)
         AST* msg = ast_new(UNARY_MSG);
         ast_add_child(msg, expr);
         ast_add_child(msg, ast_tok(IDENTIFIER));
-        printf("%d\n", (int)slist_size(&msg->children));
         expr = msg;
     }
     return expr;
@@ -290,9 +291,13 @@ static bool optional(int expected)
  *****************************************************************************/
 static int token(void)
 {
+    // Re-init the token
+    strbuf_init(&Token);
+
     // Skip any whitespace.
     whitespace();
 
+    // Get the next real token
     if (EOF == current()) {
         return EOF;
     } else if ('$' == current()) {
@@ -461,15 +466,18 @@ static void fetch(void)
  *****************************************************************************/
 static AST* ast_new(int type)
 {
-    AST* tree  = (AST*)calloc(1,sizeof(AST));
+    AST* tree  = (AST*)malloc(sizeof(AST));
+    memset(tree, 0, sizeof(AST));
     tree->type = type;
     return tree;
 }
 
 static AST* ast_tok(int type)
 {
+    AST* ast  = ast_new(type);
     expect(type);
-    return ast_new(type);
+    ast->text = strbuf_string(&Token);
+    return ast;
 }
 
 static void ast_add_child(AST* parent, AST* child)
@@ -481,7 +489,7 @@ static void ast_print(AST* tree, int depth)
 {
     int indent = depth * 2;
     printf("%*s(", indent, "");
-    printf("%d", tree->type);
+    printf("%d %s", tree->type, tree->text ? tree->text : "");
     if (slist_size(&tree->children) == 0) {
         printf(")\n");
     } else {
@@ -521,10 +529,10 @@ static void strbuf_putc(strbuf_t* buf, int ch)
 //        strbuf_putc(buf, *str++);
 //}
 
-//static char* strbuf_string(strbuf_t* buf)
-//{
-//    char* str = buf->string;
-//    strbuf_init(buf);
-//    return str;
-//}
+static char* strbuf_string(strbuf_t* buf)
+{
+    char* str = buf->string;
+    strbuf_init(buf);
+    return str;
+}
 
