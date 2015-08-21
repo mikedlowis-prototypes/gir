@@ -14,8 +14,8 @@ end
 # Release Build Targets
 #------------------------------------------------------------------------------
 # Build third party libraries
-main_env.Library('build/lib/libc.a',   FileList['modules/libc/source/**/*.c'])
-runtime_libs = ['build/lib/libc.a']
+#main_env.Library('build/lib/libc.a',   FileList['modules/libc/source/**/*.c'])
+runtime_libs = []#['build/lib/libc.a']
 
 # Build the parser
 main_env.Program('parser',  FileList['source/*.c'] + runtime_libs)
