@@ -2,9 +2,12 @@
   @file parser.c
 */
 //#include "parser.h"
-
-#include <libc.h>
-#include <data/slist.h>
+#include "slist.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdint.h>
 
 #define UNKNOWN     0
 #define SYMBOL      1
@@ -37,6 +40,11 @@
 #define BINARY_MSG  106
 #define KEYWORD_MSG 107
 #define SELECTOR    108
+
+#ifndef container_of
+#define container_of(obj, type, member) \
+    (type*)((uintptr_t)obj - offsetof(type, member))
+#endif
 
 /* Table of Contents
  *****************************************************************************/
@@ -522,12 +530,6 @@ static void strbuf_putc(strbuf_t* buf, int ch)
     buf->string[buf->index++] = ch;
     buf->string[buf->index] = '\0';
 }
-
-//static void strbuf_print(strbuf_t* buf, const char* str)
-//{
-//    while(*str)
-//        strbuf_putc(buf, *str++);
-//}
 
 static char* strbuf_string(strbuf_t* buf)
 {
