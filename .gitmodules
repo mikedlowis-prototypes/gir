@@ -1,9 +1,3 @@
-[submodule "modules/libcds"]
-	path = modules/libcds
-	url = https://github.com/mikedlowis/data-structures.git
 [submodule "modules/build-system"]
-	path = modules/build-system
-	url = https://github.com/mikedlowis/build-system.git
-[submodule "modules/libc"]
-	path = modules/libc
-	url = https://github.com/mikedlowis/libc.git
+    path = modules/build-system
+    url = https://github.com/mikedlowis/build-system.git
