@@ -1,13 +1,7 @@
 /**
   @file parser.c
 */
-//#include "parser.h"
-#include "slist.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <stdint.h>
+#include "gir_internals.h"
 
 #define UNKNOWN     0
 #define SYMBOL      1
