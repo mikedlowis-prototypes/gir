@@ -1,4 +1,4 @@
-#include "slist.h"
+#include "gir_internals.h"
 
 void slist_init(slist_t* list)
 {
