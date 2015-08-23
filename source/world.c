@@ -58,7 +58,6 @@ void world_init(void)
 }
 #endif
 
-void world_init(void)
-{
+void world_init(void) {
 }
 
