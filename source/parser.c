@@ -2,7 +2,7 @@
   @file parser.c
 */
 //#include "parser.h"
-#include "slist.h"
+#include "gir_internals.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
