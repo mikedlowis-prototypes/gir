@@ -18,7 +18,7 @@ end
 runtime_libs = []#['build/lib/libc.a']
 
 # Build the parser
-main_env.Program('parser',  FileList['source/*.c'] + runtime_libs)
+main_env.Program('gir',  FileList['source/*.c'] + runtime_libs)
 
 #------------------------------------------------------------------------------
 # Test Build Targets
