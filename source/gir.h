@@ -8,11 +8,24 @@
 #include <stdint.h>
 
 typedef struct Obj Obj;
+typedef struct GirCtx GirCtx;
+typedef struct Slot Slot;
 
-void gir_init(void* stack_btm);
-void gir_deinit(void);
-Obj* gir_evalexpr(FILE* input);
+GirCtx* gir_init(void);
 void gir_evalfile(FILE* input, const char* prompt);
+void gir_deinit(GirCtx* ctx);
+
+
+
+
+
+
+
+
+
+
+
+Obj* gir_evalexpr(FILE* input);
 Obj* gir_send(Obj* rcvr, const char* sel, ...);
 
 /*

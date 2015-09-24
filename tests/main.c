@@ -1,9 +1,13 @@
 #include "atf.h"
+#include "gir.h"
 
 int main(int argc, char** argv)
 {
     (void)argc;
     (void)argv;
+    GirCtx* ctx = gir_init();
+    RUN_EXTERN_TEST_SUITE(GirTests);
+    gir_deinit(ctx);
 
     RUN_EXTERN_TEST_SUITE(LobbyTests);
     RUN_EXTERN_TEST_SUITE(NilTests);

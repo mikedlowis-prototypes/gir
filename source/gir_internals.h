@@ -84,4 +84,25 @@ void* hamt_lookup(hamt_t* trie, void* key);
 
 void hamt_insert(hamt_t* trie, void* key);
 
+/******************************************************************************
+ * User-facing Opaque Types
+ *****************************************************************************/
+struct Obj {
+    uint32_t type;
+    uint32_t size;
+    struct Obj* parent;
+    hamt_t slots;
+    uint8_t data[];
+};
+
+struct GirCtx {
+    hamt_t intern_pool;
+    struct Obj* lobby;
+};
+
+struct Slot {
+    uintptr_t sel;
+    struct Obj* val;
+};
+
 #endif /* GIR_INTERNALS_H */
