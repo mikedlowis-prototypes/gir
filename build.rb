@@ -7,7 +7,7 @@ require './modules/build-system/setup'
 # Define the default compiler environment
 main_env = BuildEnv.new do |env|
   env["CFLAGS"]  += ['-O3', '-Wall', '-Wextra', '--std=c99', '--pedantic']
-  env["CPPPATH"] += Dir['modules/atf/source/**/']
+  env["CPPPATH"] += ['source/'] + Dir['modules/atf/source/**/']
 end
 
 sources = Dir['source/**/*.c'] - ['source/main.c']
