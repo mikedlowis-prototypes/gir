@@ -1,13 +1,13 @@
-#include <stdio.h>
+#include "gir.h"
+
 /* Main
  *****************************************************************************/
 int main(int argc, char** argv) {
-    extern void world_init(void);
-    extern void exec_file(FILE* file, const char* prompt);
-    world_init();
-    exec_file(stdin, ":> ");
     (void)argc;
     (void)argv;
+    GirCtx* ctx = gir_init();
+    gir_evalfile(stdin, ":> ");
+    gir_deinit(ctx);
     return 0;
 }
 

@@ -61,10 +61,6 @@ slist_node_t* slist_node_next(slist_node_t* node);
 /******************************************************************************
  * Hash Array Mapped Trie
  *****************************************************************************/
-typedef struct hamt_entry_t {
-    struct hamt_entry_t* next;
-} hamt_entry_t;
-
 typedef struct hamt_node_t {
     uintptr_t bitmap_or_key; /* bitmap or hash key */
     uintptr_t base_or_value; /* base of entry list or value */
@@ -88,7 +84,9 @@ typedef struct {
     uint32_t part;
     uint32_t bits;
     uint32_t level;
-    hamt_node_t* node;
+    hamt_node_t* grandparent;
+    hamt_node_t* parent;
+    hamt_node_t* current;
 } hamt_ctx_t;
 
 void hamt_init(hamt_t* trie, hamt_keyfn_t getkey, hamt_delfn_t delfn, hamt_cmpfn_t cmpfn);
@@ -96,5 +94,26 @@ void hamt_init(hamt_t* trie, hamt_keyfn_t getkey, hamt_delfn_t delfn, hamt_cmpfn
 void* hamt_lookup(hamt_t* trie, void* key);
 
 void hamt_insert(hamt_t* trie, void* key);
+
+/******************************************************************************
+ * User-facing Opaque Types
+ *****************************************************************************/
+struct Obj {
+    uint32_t type;
+    uint32_t size;
+    struct Obj* parent;
+    hamt_t slots;
+    uint8_t data[];
+};
+
+struct GirCtx {
+    hamt_t intern_pool;
+    struct Obj* lobby;
+};
+
+struct Slot {
+    uintptr_t sel;
+    struct Obj* val;
+};
 
 #endif /* GIR_INTERNALS_H */

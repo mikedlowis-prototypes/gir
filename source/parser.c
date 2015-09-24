@@ -1,6 +1,7 @@
 /**
   @file parser.c
 */
+//#include "parser.h"
 #include "gir_internals.h"
 
 #define UNKNOWN     0
