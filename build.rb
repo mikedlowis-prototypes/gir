@@ -7,22 +7,26 @@ require './modules/build-system/setup'
 # Define the default compiler environment
 main_env = BuildEnv.new do |env|
   env["CFLAGS"]  += ['-O3', '-Wall', '-Wextra', '--std=c99', '--pedantic']
-  env["CPPPATH"] += Dir['modules/libc/source/**/']
+  env["CPPPATH"] += Dir['modules/atf/source/**/']
 end
+
+sources = Dir['source/**/*.c'] - ['source/main.c']
+test_sources = Dir['tests/**/*.c'] + ['modules/atf/source/atf.c']
 
 #------------------------------------------------------------------------------
 # Release Build Targets
 #------------------------------------------------------------------------------
-# Build third party libraries
-#main_env.Library('build/lib/libc.a',   FileList['modules/libc/source/**/*.c'])
-runtime_libs = []#['build/lib/libc.a']
+# Build the language library
+main_env.Library('libgir.a', sources)
 
-# Build the parser
-main_env.Program('gir',  FileList['source/*.c'] + runtime_libs)
+# Build the interpreter
+main_env.Program('gir',  ['source/main.c', 'libgir.a'])
 
 #------------------------------------------------------------------------------
 # Test Build Targets
 #------------------------------------------------------------------------------
 if Opts[:profile].include? "test"
   # Do nothing for now
+    main_env.Program('test_gir', test_sources + ['libgir.a'])
+    main_env.Command('Unit Tests', 'test_gir', "CMD" => ['./test_gir'])
 end

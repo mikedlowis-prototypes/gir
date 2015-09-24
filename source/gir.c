@@ -21,6 +21,8 @@ Obj* Map;
 Obj* Set;
 Obj* Block;
 
+hamt_t InternPool;
+
 /* Private API Declarations
  *****************************************************************************/
 
@@ -29,6 +31,7 @@ Obj* Block;
 void gir_init(void* stack_btm)
 {
     (void)stack_btm;
+//    hamt_init(&InternPool);
 }
 
 void gir_deinit(void)
