@@ -1,5 +1,5 @@
-#include "gir.h"
 #include "gir_internals.h"
+#include "gir.h"
 
 /* String Interning
  *****************************************************************************/
@@ -50,12 +50,12 @@ static int slot_cmp(void* a, void* b) {
 
 /* Base Object Definition
  *****************************************************************************/
-Obj* obj_new(uint32_t type, size_t datasz) {
+Obj* obj_new(Obj* parent, uint32_t type, size_t datasz) {
     Obj* obj    = (Obj*)malloc(sizeof(struct Obj) + datasz);
-    obj->type   = type;
-    obj->size   = datasz;
-    obj->parent = NULL;
-    hamt_init(&(obj->slots), &slot_key, &slot_del, &slot_cmp);
+    obj->hdr.type   = type;
+    obj->hdr.size   = datasz;
+    obj->hdr.parent = parent;
+    hamt_init(&(obj->hdr.slots), &slot_key, &slot_del, &slot_cmp);
     return obj;
 }
 
@@ -63,33 +63,98 @@ void obj_set(Obj* obj, uintptr_t sel, Obj* val) {
     Slot* slot = (Slot*)malloc(sizeof(Slot));
     slot->sel  = sel;
     slot->val  = val;
-    hamt_insert(&(obj->slots), slot);
+    hamt_insert(&(obj->hdr.slots), slot);
 }
 
 Obj* obj_get(Obj* obj, uintptr_t sel) {
     Slot slot = { sel, NULL };
-    Slot* entry = hamt_lookup(&(obj->slots), &slot);
+    Slot* entry = hamt_lookup(&(obj->hdr.slots), &slot);
     return (entry != NULL) ? entry->val : NULL;
+}
+
+/* Base Environment Initialization
+ *****************************************************************************/
+static void init_nil(GirCtx* ctx) {
+    ctx->Nil = obj_new(NULL, TYPE_BARE, 0);
+    obj_set(ctx->Lobby, intern(ctx, "Nil"), ctx->Nil);
+}
+
+static void init_bool(GirCtx* ctx) {
+    ctx->Bool = obj_new(NULL, TYPE_BARE, 0);
+    obj_set(ctx->Lobby, intern(ctx, "Bool"), ctx->Bool);
+    obj_set(ctx->Lobby, intern(ctx, "True"), obj_new(ctx->Bool, TYPE_BARE, 0));
+    obj_set(ctx->Lobby, intern(ctx, "False"), obj_new(ctx->Bool, TYPE_BARE, 0));
+}
+
+//static void init_num(GirCtx* ctx) {
+//    ctx->Num = obj_new(TYPE_BARE, 0);
+//    obj_set(ctx->Lobby, intern(ctx, "Num"), ctx->Num);
+//}
+//
+//static void init_string(GirCtx* ctx) {
+//    ctx->String = obj_new(TYPE_BARE, 0);
+//    obj_set(ctx->Lobby, intern(ctx, "String"), ctx->String);
+//}
+//
+//static void init_symbol(GirCtx* ctx) {
+//    ctx->Symbol = obj_new(TYPE_BARE, 0);
+//    obj_set(ctx->Lobby, intern(ctx, "Symbol"), ctx->Symbol);
+//}
+//
+//static void init_list(GirCtx* ctx) {
+//    ctx->List = obj_new(TYPE_BARE, 0);
+//    obj_set(ctx->Lobby, intern(ctx, "List"), ctx->List);
+//}
+//
+//static void init_array(GirCtx* ctx) {
+//    ctx->Array = obj_new(TYPE_BARE, 0);
+//    obj_set(ctx->Lobby, intern(ctx, "Array"), ctx->Array);
+//}
+//
+//static void init_map(GirCtx* ctx) {
+//    ctx->Map = obj_new(TYPE_BARE, 0);
+//    obj_set(ctx->Lobby, intern(ctx, "Map"), ctx->Map);
+//}
+//
+//static void init_set(GirCtx* ctx) {
+//    ctx->Set = obj_new(TYPE_BARE, 0);
+//    obj_set(ctx->Lobby, intern(ctx, "Set"), ctx->Set);
+//}
+//
+//static void init_block(GirCtx* ctx) {
+//    ctx->Block = obj_new(TYPE_BARE, 0);
+//    obj_set(ctx->Lobby, intern(ctx, "Block"), ctx->Block);
+//}
+
+static void init_lobby(GirCtx* ctx) {
+    ctx->Lobby = obj_new(NULL, TYPE_BARE, 0);
+    init_nil(ctx);
+    init_bool(ctx);
+    //init_num(ctx);
+    //init_string(ctx);
+    //init_symbol(ctx);
+    //init_list(ctx);
+    //init_array(ctx);
+    //init_map(ctx);
+    //init_set(ctx);
+    //init_block(ctx);
 }
 
 /* Main API
  *****************************************************************************/
-GirCtx* gir_init(void)
-{
+GirCtx* gir_init(void) {
     GirCtx* ctx = malloc(sizeof(struct GirCtx));
     hamt_init(&(ctx->intern_pool), &intern_key, &intern_del, &intern_cmp);
-    ctx->lobby = NULL;
+    init_lobby(ctx);
     return ctx;
 }
 
-void gir_evalfile(FILE* input, const char* prompt)
-{
+void gir_evalfile(FILE* input, const char* prompt) {
     (void)input;
     (void)prompt;
 }
 
-void gir_deinit(GirCtx* ctx)
-{
+void gir_deinit(GirCtx* ctx) {
     free(ctx);
 }
 

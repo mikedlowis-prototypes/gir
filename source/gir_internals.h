@@ -98,22 +98,105 @@ void hamt_insert(hamt_t* trie, void* key);
 /******************************************************************************
  * User-facing Opaque Types
  *****************************************************************************/
-struct Obj {
+struct ObjHdr {
     uint32_t type;
     uint32_t size;
     struct Obj* parent;
     hamt_t slots;
+};
+
+struct Obj {
+    struct ObjHdr hdr;
     uint8_t data[];
 };
 
 struct GirCtx {
     hamt_t intern_pool;
-    struct Obj* lobby;
+    struct Obj* Lobby;
+    struct Obj* Nil;
+    struct Obj* Bool;
+    struct Obj* True;
+    struct Obj* False;
+    struct Obj* Num;
+    struct Obj* String;
+    struct Obj* Symbol;
+    struct Obj* List;
+    struct Obj* Array;
+    struct Obj* ByteArray;
+    struct Obj* Map;
+    struct Obj* Set;
+    struct Obj* Block;
 };
 
 struct Slot {
     uintptr_t sel;
     struct Obj* val;
 };
+
+/******************************************************************************
+ * Builtin Object Types
+ *****************************************************************************/
+#define TYPE_BARE   0
+#define TYPE_BOOL   1
+#define TYPE_NUM    2
+#define TYPE_STRING 3
+#define TYPE_SYMBOl 4
+#define TYPE_LIST   5
+#define TYPE_ARRAY  6
+#define TYPE_MAP    7
+#define TYPE_SET    8
+#define TYPE_BLOCK  9
+
+typedef struct ObjBool {
+    struct ObjHdr hdr;
+    bool val;
+} ObjBool;
+
+typedef struct ObjNum {
+    struct ObjHdr hdr;
+    double val;
+} ObjNum;
+
+typedef struct ObjString {
+    struct ObjHdr hdr;
+    char* val;
+} ObjString;
+
+typedef struct ObjSymbol {
+    struct ObjHdr hdr;
+    uintptr_t val;
+} ObjSymbol;
+
+typedef struct ObjList {
+    struct ObjHdr hdr;
+    slist_t val;
+} ObjList;
+
+//typedef struct ObjArray {
+//    struct ObjHdr hdr;
+//    vec_t val;
+//} ObjArray;
+
+typedef struct ObjMap {
+    struct ObjHdr hdr;
+    hamt_t val;
+} ObjMap;
+
+typedef struct ObjSet {
+    struct ObjHdr hdr;
+    hamt_t val;
+} ObjSet;
+
+//typedef struct ObjBlock {
+//    struct ObjHdr hdr;
+//    bytecode_t val;
+//} ObjBlock;
+
+/******************************************************************************
+ * Raw Object Operations
+ *****************************************************************************/
+struct Obj* obj_new(struct Obj* parent, uint32_t type, size_t datasz);
+void obj_set(struct Obj* obj, uintptr_t sel, struct Obj* val);
+struct Obj* obj_get(struct Obj* obj, uintptr_t sel);
 
 #endif /* GIR_INTERNALS_H */
