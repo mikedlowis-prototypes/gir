@@ -3,11 +3,6 @@
 */
 //#include "parser.h"
 #include "gir_internals.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <stdint.h>
 
 #define UNKNOWN     0
 #define SYMBOL      1
@@ -120,8 +115,7 @@ static char* strbuf_string(strbuf_t* buf);
 
 /*
  *****************************************************************************/
-void exec_file(FILE* file, const char* prompt)
-{
+void exec_file(FILE* file, const char* prompt) {
     File = file;
     while(true) {
         printf("%s", prompt);
@@ -131,15 +125,13 @@ void exec_file(FILE* file, const char* prompt)
 
 /* Parsing Rules
  *****************************************************************************/
-static AST* expression(void)
-{
+static AST* expression(void) {
     AST* expr = keyword_send();
     optional(SEMICOLON);
     return expr;
 }
 
-static AST* keyword_send(void)
-{
+static AST* keyword_send(void) {
     AST* expr = binary_send();
     AST* sel  = NULL;
     while (accept(KEYWORD)) {
@@ -153,8 +145,7 @@ static AST* keyword_send(void)
     return expr;
 }
 
-static AST* binary_send(void)
-{
+static AST* binary_send(void) {
     AST* expr = unary_send();
     if (accept(OPERATOR)) {
         AST* msg = ast_new(BINARY_MSG);
@@ -166,8 +157,7 @@ static AST* binary_send(void)
     return expr;
 }
 
-static AST* unary_send(void)
-{
+static AST* unary_send(void) {
     AST* expr = operand();
     while (accept(IDENTIFIER)) {
         AST* msg = ast_new(UNARY_MSG);
@@ -178,8 +168,7 @@ static AST* unary_send(void)
     return expr;
 }
 
-static AST* operand(void)
-{
+static AST* operand(void) {
     AST* obj = NULL;
     if (accept(LPAR)) {
         expect(LPAR);
@@ -191,8 +180,7 @@ static AST* operand(void)
     return obj;
 }
 
-static AST* literal(void)
-{
+static AST* literal(void) {
     AST* obj = NULL;
     switch (CurrTok) {
         case IDENTIFIER: obj = ast_tok(IDENTIFIER); break;
@@ -209,8 +197,7 @@ static AST* literal(void)
     return obj;
 }
 
-static AST* array(void)
-{
+static AST* array(void) {
     AST* array_obj = ast_new(ARRAY);
     expect(LBRACK);
     while (!accept(RBRACK)) {
@@ -220,8 +207,7 @@ static AST* array(void)
     return array_obj;
 }
 
-static AST* hashmap(void)
-{
+static AST* hashmap(void) {
     AST* hashmap = ast_new(HASHMAP);
     expect(AT_LBRACE);
     while (!accept(RBRACE)) {
@@ -235,8 +221,7 @@ static AST* hashmap(void)
     return hashmap;
 }
 
-static AST* hashset(void)
-{
+static AST* hashset(void) {
     AST* hashset = ast_new(HASHSET);
     expect(AT_LBRACK);
     while (!accept(RBRACK)) {
@@ -246,8 +231,7 @@ static AST* hashset(void)
     return hashset;
 }
 
-static AST* object(void)
-{
+static AST* object(void) {
     AST* object = ast_new(OBJECT);
     expect(LBRACE);
     if (accept(PIPE)) {
@@ -263,22 +247,19 @@ static AST* object(void)
 
 /* Parsing Helpers
  *****************************************************************************/
-static void error(const char* msg)
-{
+static void error(const char* msg) {
     fprintf(stderr, "Error: %s\n", msg);
     exit(1);
 }
 
-static bool accept(int expected)
-{
+static bool accept(int expected) {
     if (CurrTok == UNKNOWN) {
         CurrTok = token();
     }
     return (CurrTok == expected);
 }
 
-static bool expect(int expected)
-{
+static bool expect(int expected) {
     bool accepted = accept(expected);
     if (!accepted)
         error("unexpected symbol");
@@ -287,8 +268,7 @@ static bool expect(int expected)
     return accepted;
 }
 
-static bool optional(int expected)
-{
+static bool optional(int expected) {
     if (accept(expected))
         return expect(expected);
     else
@@ -297,8 +277,7 @@ static bool optional(int expected)
 
 /* Lexical Rules
  *****************************************************************************/
-static int token(void)
-{
+static int token(void) {
     // Re-init the token
     strbuf_init(&Token);
 
@@ -323,8 +302,7 @@ static int token(void)
     }
 }
 
-static void whitespace(void)
-{
+static void whitespace(void) {
     while(isspace(current()) || ('#' == current())) {
         if ('#' == current()) {
             discard();
@@ -337,16 +315,14 @@ static void whitespace(void)
     }
 }
 
-static int symbol(void)
-{
+static int symbol(void) {
     expect_ch('$');
     while (isalnum(current()))
         append();
     return SYMBOL;
 }
 
-static int identifier(void)
-{
+static int identifier(void) {
     while (isalnum(current()))
         append();
 
@@ -358,16 +334,14 @@ static int identifier(void)
     }
 }
 
-static int number(void)
-{
+static int number(void) {
     append();
     while (isdigit(current()))
         append();
     return NUMBER;
 }
 
-static int string(void)
-{
+static int string(void) {
     expect_ch('"');
     while('"' != current())
         append();
@@ -375,16 +349,14 @@ static int string(void)
     return STRING;
 }
 
-static int character(void)
-{
+static int character(void) {
     expect_ch('\'');
     append();
     expect_ch('\'');
     return CHARACTER;
 }
 
-static int punctuation(void)
-{
+static int punctuation(void) {
     if ('@' == current()) {
         expect_ch('@');
         if ('[' == current()) {
@@ -421,46 +393,39 @@ static int punctuation(void)
     }
 }
 
-static int operator(void)
-{
+static int operator(void) {
     lex_error();
     return UNKNOWN;
 }
 
 /* Lexical Analysis Helpers
  *****************************************************************************/
-static int current(void)
-{
+static int current(void) {
     return CurrChar;
 }
 
-static void append(void)
-{
+static void append(void) {
     strbuf_putc(&Token, CurrChar);
     fetch();
 }
 
-static void discard(void)
-{
+static void discard(void) {
     fetch();
 }
 
-static void expect_ch(int ch)
-{
+static void expect_ch(int ch) {
     if (ch == current())
         append();
     else
         lex_error();
 }
 
-static void lex_error(void)
-{
+static void lex_error(void) {
     fprintf(stderr, "Lexer error\n");
     exit(1);
 }
 
-static void fetch(void)
-{
+static void fetch(void) {
     CurrChar = fgetc(File);
     if (CurrChar == '\n') {
         Line++;
@@ -472,29 +437,25 @@ static void fetch(void)
 
 /* Tree Routines
  *****************************************************************************/
-static AST* ast_new(int type)
-{
+static AST* ast_new(int type) {
     AST* tree  = (AST*)malloc(sizeof(AST));
     memset(tree, 0, sizeof(AST));
     tree->type = type;
     return tree;
 }
 
-static AST* ast_tok(int type)
-{
+static AST* ast_tok(int type) {
     AST* ast  = ast_new(type);
     expect(type);
     ast->text = strbuf_string(&Token);
     return ast;
 }
 
-static void ast_add_child(AST* parent, AST* child)
-{
+static void ast_add_child(AST* parent, AST* child) {
     slist_push_back(&(parent->children), &(child->link));
 }
 
-static void ast_print(AST* tree, int depth)
-{
+static void ast_print(AST* tree, int depth) {
     int indent = depth * 2;
     printf("%*s(", indent, "");
     printf("%d %s", tree->type, tree->text ? tree->text : "");
@@ -511,16 +472,14 @@ static void ast_print(AST* tree, int depth)
 
 /* String Buffer
  *****************************************************************************/
-static void strbuf_init(strbuf_t* buf)
-{
+static void strbuf_init(strbuf_t* buf) {
     buf->index = 0;
     buf->capacity = 8;
     buf->string = (char*)malloc(buf->capacity);
     buf->string[buf->index] = 0;
 }
 
-static void strbuf_putc(strbuf_t* buf, int ch)
-{
+static void strbuf_putc(strbuf_t* buf, int ch) {
     if (buf->string == NULL) {
         strbuf_init(buf);
     } else if ((buf->index + 2) >= buf->capacity) {
@@ -531,8 +490,7 @@ static void strbuf_putc(strbuf_t* buf, int ch)
     buf->string[buf->index] = '\0';
 }
 
-static char* strbuf_string(strbuf_t* buf)
-{
+static char* strbuf_string(strbuf_t* buf) {
     char* str = buf->string;
     strbuf_init(buf);
     return str;

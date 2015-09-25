@@ -10,6 +10,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+
+/******************************************************************************
+ * Garbage Collection
+ *****************************************************************************/
+void gc_init(void** stkbtm);
+void gc_deinit(void);
+void* gc_alloc(size_t sz);
+void gc_addref(void* obj);
+void gc_delfref(void* obj);
 
 /******************************************************************************
  * Singly Linked List

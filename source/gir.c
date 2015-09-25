@@ -50,13 +50,26 @@ static int slot_cmp(void* a, void* b) {
 
 /* Base Object Definition
  *****************************************************************************/
-Obj* mkobject(uint32_t type, size_t datasz) {
+Obj* obj_new(uint32_t type, size_t datasz) {
     Obj* obj    = (Obj*)malloc(sizeof(struct Obj) + datasz);
     obj->type   = type;
     obj->size   = datasz;
     obj->parent = NULL;
     hamt_init(&(obj->slots), &slot_key, &slot_del, &slot_cmp);
     return obj;
+}
+
+void obj_set(Obj* obj, uintptr_t sel, Obj* val) {
+    Slot* slot = (Slot*)malloc(sizeof(Slot));
+    slot->sel  = sel;
+    slot->val  = val;
+    hamt_insert(&(obj->slots), slot);
+}
+
+Obj* obj_get(Obj* obj, uintptr_t sel) {
+    Slot slot = { sel, NULL };
+    Slot* entry = hamt_lookup(&(obj->slots), &slot);
+    return (entry != NULL) ? entry->val : NULL;
 }
 
 /* Main API
