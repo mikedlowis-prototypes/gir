@@ -1,0 +1,76 @@
+# Construction Variables
+cc      = gcc
+ar      = ar
+ld      = gcc
+cflags  = -g -O3 -Wall -Wextra --std=c99 --pedantic
+incdirs = -Isource/ -Imodules/atf/source/
+depgen  =
+
+# Construction Rules
+rule cc
+    command = $cc -MMD -MF $out.d $cflags $incdirs -o $out -c $in
+    description = CC $out
+    depfile = $out.d
+
+rule ld
+    command = $ld -o $out $in
+    description = LD $out
+
+rule ar
+    command = $ar rcs $out $in
+    description = AR $out
+
+rule runtest
+    command = ./$in > $out && cat $out
+    description = TEST $out
+
+# Build the static library
+build source/gir.o: cc source/gir.c
+build source/hamt.o: cc source/hamt.c
+build source/parser.o: cc source/parser.c
+build source/slist.o: cc source/slist.c
+build libgir.a: ar source/gir.o source/hamt.o source/parser.o source/slist.o
+
+# Build the interpreter
+build source/main.o: cc source/main.c
+build gir: ld source/main.o libgir.a
+
+# Build the test suite
+build modules/atf/source/atf.o: cc modules/atf/source/atf.c
+build tests/test_block.o: cc tests/test_block.c
+build tests/test_false.o: cc tests/test_false.c
+build tests/test_list.o: cc tests/test_list.c
+build tests/test_map.o: cc tests/test_map.c
+build tests/test_num.o: cc tests/test_num.c
+build tests/test_string.o: cc tests/test_string.c
+build tests/test_true.o: cc tests/test_true.c
+build tests/test_array.o: cc tests/test_array.c
+build tests/test_bool.o: cc tests/test_bool.c
+build tests/test_gir.o: cc tests/test_gir.c
+build tests/test_lobby.o: cc tests/test_lobby.c
+build tests/test_nil.o: cc tests/test_nil.c
+build tests/test_set.o: cc tests/test_set.c
+build tests/test_symbol.o: cc tests/test_symbol.c
+build tests/main.o: cc tests/main.c
+build test_gir: ld           $
+    modules/atf/source/atf.o $
+    tests/test_block.o       $
+    tests/test_false.o       $
+    tests/test_list.o        $
+    tests/test_map.o         $
+    tests/test_num.o         $
+    tests/test_string.o      $
+    tests/test_true.o        $
+    tests/test_array.o       $
+    tests/test_bool.o        $
+    tests/test_gir.o         $
+    tests/test_lobby.o       $
+    tests/test_nil.o         $
+    tests/test_set.o         $
+    tests/test_symbol.o      $
+    tests/main.o             $
+    libgir.a
+
+# Run the test suite
+build tests.log: runtest test_gir
+
