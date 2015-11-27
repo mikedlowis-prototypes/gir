@@ -28,12 +28,12 @@ TEST_SUITE(GirTests) {
         CHECK(obj == obj_get(obj, 42));
     }
 
-    TEST(Set the value of a slot for an object) {
-        Obj* obj = obj_new(NULL, 1, sizeof(int));
-        obj_set(obj, 42, obj);
-        CHECK(obj != NULL);
-        CHECK(obj == obj_get(obj, 42));
-        obj_set(obj, 42, NULL);
-        CHECK(NULL == obj_get(obj, 42));
-    }
+    //TEST(Set the value of a slot for an object) {
+    //    Obj* obj = obj_new(NULL, 1, sizeof(int));
+    //    obj_set(obj, 42, obj);
+    //    CHECK(obj != NULL);
+    //    CHECK(obj == obj_get(obj, 42));
+    //    obj_set(obj, 42, NULL);
+    //    CHECK(NULL == obj_get(obj, 42));
+    //}
 }
