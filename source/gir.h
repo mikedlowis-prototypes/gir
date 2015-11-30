@@ -1,6 +1,3 @@
-/**
-  @file gir.h
-*/
 #ifndef GIR_H
 #define GIR_H
 

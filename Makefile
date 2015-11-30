@@ -2,17 +2,18 @@
 # Build Configuration
 #------------------------------------------------------------------------------
 # Update these variables according to your requirements.
-VERSION = 0.1
 
 # tools
 CC = c99
 LD = ${CC}
+AR = ar
 
 # flags
 INCS      = -Isource/ -Itests/
-CPPFLAGS  = -DVERSION=\"${VERSION}\" -D_XOPEN_SOURCE=700
+CPPFLAGS  = -D_XOPEN_SOURCE=700
 CFLAGS   += ${INCS} ${CPPFLAGS}
 LDFLAGS  += ${LIBS}
+ARFLAGS   = rcs
 
 #------------------------------------------------------------------------------
 # Build Targets and Rules
@@ -21,11 +22,11 @@ SRCS = source/gc.c     \
        source/gir.c    \
        source/hamt.c   \
        source/parser.c \
-       source/slist.c
+       source/slist.c  \
+       source/main.c
 OBJS = ${SRCS:.c=.o}
-
-REPL_SRCS = ${SRCS} source/main.c
-REPL_OBJS = ${REPL_SRCS:.c=.o}
+LIB  = libgir.a
+BIN  = gir
 
 TEST_SRCS= tests/main.c        \
            tests/atf.c         \
@@ -44,30 +45,38 @@ TEST_SRCS= tests/main.c        \
            tests/test_set.c    \
            tests/test_symbol.c
 TEST_OBJS = ${TEST_SRCS:.c=.o}
+TEST_BIN  = testgir
 
-all: options gir testgir
+all: options ${BIN} ${TEST_BIN}
 
 options:
-	@echo "CC       = ${CC}"
-	@echo "CFLAGS   = ${CFLAGS}"
-	@echo "LD       = ${LD}"
-	@echo "LDFLAGS  = ${LDFLAGS}"
+	@echo "Toolset Configuration:"
+	@echo "  CC       = ${CC}"
+	@echo "  CFLAGS   = ${CFLAGS}"
+	@echo "  LD       = ${LD}"
+	@echo "  LDFLAGS  = ${LDFLAGS}"
+	@echo "  AR       = ${AR}"
+	@echo "  ARFLAGS  = ${ARFLAGS}"
 
-gir: ${REPL_OBJS}
-	@echo LD $@
-	@${LD} -o $@ ${REPL_OBJS} ${LDFLAGS}
+${LIB}: ${OBJS}
+	@echo AR $@
+	@${AR} ${ARFLAGS} $@ ${OBJS}
 
-testgir: ${TEST_OBJS} ${OBJS}
+${BIN}: ${LIB}
 	@echo LD $@
-	@${LD} -o $@ ${TEST_OBJS} ${OBJS} ${LDFLAGS}
-	@./testgir
+	@${LD} -o $@ ${LIB} ${LDFLAGS}
+
+${TEST_BIN}: ${TEST_OBJS} ${OBJS}
+	@echo LD $@
+	@${LD} -o $@ ${TEST_OBJS} ${LIB} ${LDFLAGS}
+	@./$@
 
 .c.o:
 	@echo CC $<
 	@${CC} ${CFLAGS} -c -o $@ $<
 
 clean:
-	@rm -f gir testgir ${OBJS} ${TEST_OBJS}
+	@rm -f ${BIN} ${TEST_BIN} ${LIB} ${OBJS} ${TEST_OBJS}
 
 .PHONY: all options
 
